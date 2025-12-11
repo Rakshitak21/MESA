@@ -1046,6 +1046,16 @@ class TerrainDiffusionPipeline(
                     [latents] * 2) if self.do_classifier_free_guidance else latents
                 latent_model_input = self.scheduler.scale_model_input(
                     latent_model_input, t)
+                if biome_mask is not None:
+                    if biome_mask.ndim == 4 and biome_mask.shape[1] != latents.shape[1]:
+                        biome_mask = biome_mask.permute(0, 3, 1, 2)
+
+                    biome_mask = biome_mask.to(latent_model_input.device, latent_model_input.dtype)
+
+                    if self.do_classifier_free_guidance:
+                        biome_mask = torch.cat([biome_mask, biome_mask], dim=0)
+
+                    latent_model_input = torch.cat([latent_model_input, biome_mask], dim=1)
 
                 # predict the noise residual
                 noise_pred = self.unet(
