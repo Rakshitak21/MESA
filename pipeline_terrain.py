@@ -1027,33 +1027,33 @@ class TerrainDiffusionPipeline(
         # Normalize type & dims → make sure torch tensor of shape (1, C, H, W)
         if not torch.is_tensor(biome_mask_hr):
             try:
-            biome_mask_hr = torch.tensor(biome_mask_hr, dtype=torch.float32)
-        except Exception:
-            raise ValueError("biome_mask must be convertible to a torch tensor or None")
+                biome_mask_hr = torch.tensor(biome_mask_hr, dtype=torch.float32)
+            except Exception:
+                raise ValueError("biome_mask must be convertible to a torch tensor or None")
 
         # If mask is NHWC (you handled this case in loop) try to be robust:
         if biome_mask_hr.ndim == 4 and biome_mask_hr.shape[1] not in range(1, 32) and biome_mask_hr.shape[-1] in (height, width):
         # guess it's (1, H, W, C) → permute to (1,C,H,W)
-        biome_mask_hr = biome_mask_hr.permute(0, 3, 1, 2)
+            biome_mask_hr = biome_mask_hr.permute(0, 3, 1, 2)
 
         # Now downsample the HR mask to the latents' spatial resolution
         H_lat = latents.shape[-2]  # should be int(height // self.vae_scale_factor)
         W_lat = latents.shape[-1]
         biome_mask = F.interpolate(
-          biome_mask_hr.to(device=device, dtype=latents.dtype),
-          size=(H_lat, W_lat),
-          mode="bilinear",
-          align_corners=False,
+            biome_mask_hr.to(device=device, dtype=latents.dtype),
+            size=(H_lat, W_lat),
+            mode="bilinear",
+            align_corners=False,
         )
  
         # repeat across batch (latents batch = batch_size * num_images_per_prompt)
         expected_batch = batch_size * num_images_per_prompt
         if biome_mask.shape[0] == 1 and expected_batch > 1:
-             biome_mask = biome_mask.repeat(expected_batch, 1, 1, 1)
+            biome_mask = biome_mask.repeat(expected_batch, 1, 1, 1)
         elif biome_mask.shape[0] != expected_batch:
         # If user gave a batch of masks, make sure it matches expected batch
         if biome_mask.shape[0] != expected_batch:
-          raise ValueError(f"biome_mask batch size ({biome_mask.shape[0]}) != expected ({expected_batch})")
+            raise ValueError(f"biome_mask batch size ({biome_mask.shape[0]}) != expected ({expected_batch})")
 
        # Leave the mask as-is — the denoising loop already duplicates for classifier-free guidance.
        # (Inside the loop we handle dtype/device and doubling for guidance.)
