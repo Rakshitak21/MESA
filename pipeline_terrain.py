@@ -1052,7 +1052,7 @@ class TerrainDiffusionPipeline(
             biome_mask = biome_mask.repeat(expected_batch, 1, 1, 1)
         elif biome_mask.shape[0] != expected_batch:
         # If user gave a batch of masks, make sure it matches expected batch
-        if biome_mask.shape[0] != expected_batch:
+          if biome_mask.shape[0] != expected_batch:
             raise ValueError(f"biome_mask batch size ({biome_mask.shape[0]}) != expected ({expected_batch})")
 
        # Leave the mask as-is — the denoising loop already duplicates for classifier-free guidance.
