@@ -161,7 +161,7 @@ class UNetDEMConditionModel(
     def __init__(
         self,
         sample_size: Optional[int] = None,
-        in_channels: int = 13,
+        in_channels: int = 18,
         out_channels: int = 8,
         center_input_sample: bool = False,
         flip_sin_to_cos: bool = True,
@@ -253,6 +253,32 @@ class UNetDEMConditionModel(
         self.conv_in_dem = nn.Conv2d(
             in_channels, block_out_channels[0], kernel_size=conv_in_kernel, padding=conv_in_padding
         )
+        # -----------------------------------------
+        # PATCH: Expand conv_in weights for 5 biome channels
+        # -----------------------------------------
+        old_in = 13   # original channel count
+        new_in = 18   # new count with biome channels
+
+        if self.conv_in_img.weight.shape[1] == old_in:
+            new_weight_img = torch.zeros(
+                (self.conv_in_img.out_channels, new_in, self.conv_in_img.kernel_size[0], self.conv_in_img.kernel_size[0])
+           )
+           new_weight_img[:, :old_in] = self.conv_in_img.weight.data
+           self.conv_in_img = nn.Conv2d(new_in, self.conv_in_img.out_channels, kernel_size=self.conv_in_img.kernel_size,
+                                 padding=self.conv_in_img.padding)
+           self.conv_in_img.weight.data = new_weight_img
+           self.conv_in_img.bias.data = self.conv_in_img.bias.data
+
+        if self.conv_in_dem.weight.shape[1] == old_in:
+            new_weight_dem = torch.zeros(
+                (self.conv_in_dem.out_channels, new_in, self.conv_in_dem.kernel_size[0], self.conv_in_dem.kernel_size[0])
+            )
+            new_weight_dem[:, :old_in] = self.conv_in_dem.weight.data
+            self.conv_in_dem = nn.Conv2d(new_in, self.conv_in_dem.out_channels, kernel_size=self.conv_in_dem.kernel_size,
+                                 padding=self.conv_in_dem.padding)
+            self.conv_in_dem.weight.data = new_weight_dem
+            self.conv_in_dem.bias.data = self.conv_in_dem.bias.data
+
 
         # time
         time_embed_dim, timestep_input_dim = self._set_time_proj(
