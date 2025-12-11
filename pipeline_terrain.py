@@ -798,6 +798,7 @@ class TerrainDiffusionPipeline(
         timesteps: List[int] = None,
         sigmas: List[float] = None,
         guidance_scale: float = 7.5,
+        biome_mask=None,
         negative_prompt: Optional[Union[str, List[str]]] = None,
         num_images_per_prompt: Optional[int] = 1,
         eta: float = 0.0,
