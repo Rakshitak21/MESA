@@ -8,6 +8,8 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import torch
 from packaging import version
 from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection
+from biome_masking import make_biome_mask   # <-- your file: /content/MESA/biome_masking.py
+import torch.nn.functional as F
 
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.configuration_utils import FrozenDict
