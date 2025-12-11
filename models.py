@@ -254,54 +254,53 @@ class UNetDEMConditionModel(
             in_channels, block_out_channels[0], kernel_size=conv_in_kernel, padding=conv_in_padding
         )
         # -----------------------------------------
-# PATCH: Expand conv_in weights from 4 → 9 channels (4 latents + 5 biome channels)
-# -----------------------------------------
-import math
-import torch.nn as nn
+        # PATCH: Expand conv_in weights from 4 → 9 channels (4 latents + 5 biome channels)
+        # -----------------------------------------
+        import math
+        import torch.nn as nn
 
-expected_old_in = 4         # original UNet input channels
-expected_new_in = 9         # 4 + 5 biome channels
+        expected_old_in = 4         # original UNet input channels
+        expected_new_in = 9         # 4 + 5 biome channels
 
-def expand_conv_in(conv, name):
-    old_w = conv.weight.data
-    old_in = old_w.shape[1]
+        def expand_conv_in(conv, name):
+            old_w = conv.weight.data
+            old_in = old_w.shape[1]
 
     # Only expand when checkpoint has old shape
-    if old_in != expected_old_in:
-        print(f"[SKIP] {name} already has {old_in} channels")
-        return conv
+            if old_in != expected_old_in:
+                print(f"[SKIP] {name} already has {old_in} channels")
+                return conv
 
-    print(f"[EXPANDING] {name}: {old_in} → {expected_new_in} channels")
+            print(f"[EXPANDING] {name}: {old_in} → {expected_new_in} channels")
 
     # Create expanded weight tensor
-    new_w = torch.zeros(
-        (old_w.shape[0], expected_new_in, old_w.shape[2], old_w.shape[3]),
-        device=old_w.device,
-        dtype=old_w.dtype
-    )
+            new_w = torch.zeros(
+                (old_w.shape[0], expected_new_in, old_w.shape[2], old_w.shape[3]),
+                device=old_w.device,
+                dtype=old_w.dtype
+            )
 
     # Copy original channels
-    new_w[:, :expected_old_in] = old_w
+            new_w[:, :expected_old_in] = old_w
 
     # Initialize biome channels
-    nn.init.kaiming_uniform_(new_w[:, expected_old_in:], a=math.sqrt(5))
+            nn.init.kaiming_uniform_(new_w[:, expected_old_in:], a=math.sqrt(5))
 
     # Create a new conv layer with adjusted in_channels
-    new_conv = nn.Conv2d(
-        expected_new_in,
-        conv.out_channels,
-        kernel_size=conv.kernel_size,
-        padding=conv.padding,
-    ).to(conv.weight.device)
+            new_conv = nn.Conv2d(
+            expected_new_in,
+            conv.out_channels,
+            kernel_size=conv.kernel_size,
+            padding=conv.padding,
+            ).to(conv.weight.device)
 
-    new_conv.weight = nn.Parameter(new_w)
-    new_conv.bias = conv.bias
+            new_conv.weight = nn.Parameter(new_w)
+            new_conv.bias = conv.bias
 
-    return new_conv
+            return new_conv
 
-# Apply expansion patch
-self.conv_in_img = expand_conv_in(self.conv_in_img, "conv_in_img")
-self.conv_in_dem = expand_conv_in(self.conv_in_dem, "conv_in_dem")
+        self.conv_in_img = expand_conv_in(self.conv_in_img, "conv_in_img")
+        self.conv_in_dem = expand_conv_in(self.conv_in_dem, "conv_in_dem")
 
 
         # time
