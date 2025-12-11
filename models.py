@@ -161,7 +161,7 @@ class UNetDEMConditionModel(
     def __init__(
         self,
         sample_size: Optional[int] = None,
-        in_channels: int = 8,
+        in_channels: int = 13,
         out_channels: int = 8,
         center_input_sample: bool = False,
         flip_sin_to_cos: bool = True,
@@ -1188,11 +1188,22 @@ class UNetDEMConditionModel(
             encoder_hidden_states=encoder_hidden_states, added_cond_kwargs=added_cond_kwargs
         )
 
-        sample_img = sample[:, :4, :, :]
-        sample_dem = sample[:, 4:, :, :]
+        num_rgb = 4
+        num_dem = 4
+        num_biome = 5
+
+        sample_img  = sample[:, :num_rgb, :, :]
+        sample_dem  = sample[:, num_rgb:num_rgb + num_dem, :, :]
+        sample_biome = sample[:, num_rgb + num_dem : num_rgb + num_dem + num_biome, :, :]
+
         # 2. pre-process using the two different heads
+        # Add biome into RGB and DEM streams
+        sample_img = torch.cat([sample_img, sample_biome], dim=1)
+        sample_dem = torch.cat([sample_dem, sample_biome], dim=1)
+
         sample_img = self.conv_in_img(sample_img)
         sample_dem = self.conv_in_dem(sample_dem)
+
 
         # 2.5 GLIGEN position net
         if cross_attention_kwargs is not None and cross_attention_kwargs.get("gligen", None) is not None:
