@@ -263,11 +263,11 @@ class UNetDEMConditionModel(
             new_weight_img = torch.zeros(
                 (self.conv_in_img.out_channels, new_in, self.conv_in_img.kernel_size[0], self.conv_in_img.kernel_size[0])
            )
-           new_weight_img[:, :old_in] = self.conv_in_img.weight.data
-           self.conv_in_img = nn.Conv2d(new_in, self.conv_in_img.out_channels, kernel_size=self.conv_in_img.kernel_size,
+            new_weight_img[:, :old_in] = self.conv_in_img.weight.data
+            self.conv_in_img = nn.Conv2d(new_in, self.conv_in_img.out_channels, kernel_size=self.conv_in_img.kernel_size,
                                  padding=self.conv_in_img.padding)
-           self.conv_in_img.weight.data = new_weight_img
-           self.conv_in_img.bias.data = self.conv_in_img.bias.data
+            self.conv_in_img.weight.data = new_weight_img
+            self.conv_in_img.bias.data = self.conv_in_img.bias.data
 
         if self.conv_in_dem.weight.shape[1] == old_in:
             new_weight_dem = torch.zeros(
