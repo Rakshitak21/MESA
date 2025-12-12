@@ -1020,8 +1020,7 @@ class TerrainDiffusionPipeline(
             biome_mask_hr = make_biome_mask(height, width, prompt)  # (1, C_biome, H, W)
         else:
             biome_mask_hr = biome_mask  # allow user-provided mask (numpy/torch/HCW)
-
-        # Normalize type & dims → make sure torch tensor of shape (1, C, H, W)
+            
         if not torch.is_tensor(biome_mask_hr):
             biome_mask_hr = torch.tensor(biome_mask_hr, dtype=torch.float32)
             
@@ -1042,9 +1041,6 @@ class TerrainDiffusionPipeline(
             biome_mask = biome_mask.repeat(expected_batch, 1, 1, 1)
         elif biome_mask.shape[0] != expected_batch:
             raise ValueError(f"biome_mask batch size ({biome_mask.shape[0]}) != expected ({expected_batch})")
-
-      
-
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
 
