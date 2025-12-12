@@ -1028,14 +1028,10 @@ class TerrainDiffusionPipeline(
 
         # Normalize type & dims → make sure torch tensor of shape (1, C, H, W)
         if not torch.is_tensor(biome_mask_hr):
-            try:
-                biome_mask_hr = torch.tensor(biome_mask_hr, dtype=torch.float32)
-            except Exception:
-                raise ValueError("biome_mask must be convertible to a torch tensor or None")
-
+            biome_mask_hr = torch.tensor(biome_mask_hr, dtype=torch.float32)
+            
         # If mask is NHWC (you handled this case in loop) try to be robust:
-        if biome_mask_hr.ndim == 4 and biome_mask_hr.shape[1] not in range(1, 32) and biome_mask_hr.shape[-1] in (height, width):
-        # guess it's (1, H, W, C) → permute to (1,C,H,W)
+        if biome_mask_hr.ndim == 4 and biome_mask_hr.shape[-1] == 5:
             biome_mask_hr = biome_mask_hr.permute(0, 3, 1, 2)
 
         # Now downsample the HR mask to the latents' spatial resolution
@@ -1053,8 +1049,6 @@ class TerrainDiffusionPipeline(
         if biome_mask.shape[0] == 1 and expected_batch > 1:
             biome_mask = biome_mask.repeat(expected_batch, 1, 1, 1)
         elif biome_mask.shape[0] != expected_batch:
-        # If user gave a batch of masks, make sure it matches expected batch
-          if biome_mask.shape[0] != expected_batch:
             raise ValueError(f"biome_mask batch size ({biome_mask.shape[0]}) != expected ({expected_batch})")
 
        # Leave the mask as-is — the denoising loop already duplicates for classifier-free guidance.
