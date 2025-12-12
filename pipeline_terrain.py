@@ -1076,13 +1076,33 @@ class TerrainDiffusionPipeline(
                 latent_model_input = self.scheduler.scale_model_input(
                     latent_model_input, t)
                 if biome_mask is not None:
-                    if biome_mask.ndim == 4 and biome_mask.shape[1] != latents.shape[1]:
+                    if biome_mask.ndim == 4 and biome_mask.shape[-1] <= 32 and biome_mask.shape[1] > 32:
                         biome_mask = biome_mask.permute(0, 3, 1, 2)
 
-                    biome_mask = biome_mask.to(latent_model_input.device, latent_model_input.dtype)
+                    biome_mask = biome_mask.to(device=latent_model_input.device, dtype=latent_model_input.dtype)
+
+                    if biome_mask.shape[0] == 1 and latent_model_input.shape[0] > 1:
+                        biome_mask = biome_mask.repeat(latent_model_input.shape[0], 1, 1, 1)
+
+                    lat_h, lat_w = latent_model_input.shape[-2], latent_model_input.shape[-1]
+                    if biome_mask.shape[-2:] != (lat_h, lat_w):
+                        biome_mask = F.interpolate(biome_mask, size=(lat_h, lat_w), mode="bilinear", align_corners=False)
 
                     if self.do_classifier_free_guidance:
-                        biome_mask = torch.cat([biome_mask, biome_mask], dim=0)
+                        if biome_mask.shape[0] * 2 == latent_model_input.shape[0]:
+                            biome_mask = torch.cat([biome_mask, biome_mask], dim=0)
+                        else:
+                            needed = latent_model_input.shape[0] - biome_mask.shape[0]
+                            if needed > 0:
+                                biome_mask = torch.cat([biome_mask] + [biome_mask[:1]] * needed, dim=0)
+
+                    if biome_mask.shape[0] != latent_model_input.shape[0]:
+                        raise ValueError(
+                            f"biome_mask batch ({biome_mask.shape[0]}) != latent batch ({latent_model_input.shape[0]})"
+                        )
+
+                    if biome_mask.shape[-2:] != (lat_h, lat_w):
+                        biome_mask = F.interpolate(biome_mask, size=(lat_h, lat_w), mode="bilinear", align_corners=False)
 
                     latent_model_input = torch.cat([latent_model_input, biome_mask], dim=1)
 
