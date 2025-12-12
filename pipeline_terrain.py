@@ -11,7 +11,7 @@ from packaging import version
 from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection
 from biome_masking import make_biome_mask   # <-- your file: /content/MESA/biome_masking.py
 import torch.nn.functional as F
-
+from models import UNetDEMConditionModel
 from diffusers.callbacks import MultiPipelineCallbacks, PipelineCallback
 from diffusers.configuration_utils import FrozenDict
 from diffusers.image_processor import PipelineImageInput, VaeImageProcessor
@@ -180,7 +180,7 @@ class TerrainDiffusionPipeline(
     model_cpu_offload_seq = "text_encoder->image_encoder->unet->vae"
     _optional_components = ["safety_checker",
                             "feature_extractor", "image_encoder"]
-    
+    _load_model_core_type = UNetDEMConditionModel
     _exclude_from_cpu_offload = ["safety_checker"]
     _callback_tensor_inputs = ["latents",
                                "prompt_embeds", "negative_prompt_embeds"]
