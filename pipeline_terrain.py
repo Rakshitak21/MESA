@@ -1015,13 +1015,8 @@ class TerrainDiffusionPipeline(
             generator,
             latents,
         )
-        # -----------------------------
-        # AUTO-GENERATE / PREPARE BIOME MASK
-        # -----------------------------
-        # If the user didn't pass a biome_mask, generate one from prompt.
-        # make_biome_mask returns shape (1, num_biomes, H, W) with H/W = full image resolution.
+        
         if biome_mask is None:
-            # create CPU tensor from prompt at full resolution
             biome_mask_hr = make_biome_mask(height, width, prompt)  # (1, C_biome, H, W)
         else:
             biome_mask_hr = biome_mask  # allow user-provided mask (numpy/torch/HCW)
@@ -1030,11 +1025,9 @@ class TerrainDiffusionPipeline(
         if not torch.is_tensor(biome_mask_hr):
             biome_mask_hr = torch.tensor(biome_mask_hr, dtype=torch.float32)
             
-        # If mask is NHWC (you handled this case in loop) try to be robust:
         if biome_mask_hr.ndim == 4 and biome_mask_hr.shape[-1] == 5:
             biome_mask_hr = biome_mask_hr.permute(0, 3, 1, 2)
 
-        # Now downsample the HR mask to the latents' spatial resolution
         H_lat = latents.shape[-2]  # should be int(height // self.vae_scale_factor)
         W_lat = latents.shape[-1]
         biome_mask = F.interpolate(
@@ -1044,7 +1037,6 @@ class TerrainDiffusionPipeline(
             align_corners=False,
         )
  
-        # repeat across batch (latents batch = batch_size * num_images_per_prompt)
         expected_batch = batch_size * num_images_per_prompt
         if biome_mask.shape[0] == 1 and expected_batch > 1:
             biome_mask = biome_mask.repeat(expected_batch, 1, 1, 1)
