@@ -257,8 +257,7 @@ class UNetDEMConditionModel(
         # -----------------------------------------
         # PATCH: Expand conv_in weights from 4 → 9 channels (4 latents + 5 biome channels)
         # -----------------------------------------
-        import math
-        import torch.nn as nn
+        
 
         expected_old_in = 4         # original UNet input channels
         expected_new_in = 9         # 4 + 5 biome channels
