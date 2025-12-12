@@ -6,6 +6,7 @@ import inspect
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import torch
+import torch.nn as nn
 from packaging import version
 from transformers import CLIPImageProcessor, CLIPTextModel, CLIPTokenizer, CLIPVisionModelWithProjection
 from biome_masking import make_biome_mask   # <-- your file: /content/MESA/biome_masking.py
