@@ -1051,10 +1051,7 @@ class TerrainDiffusionPipeline(
         elif biome_mask.shape[0] != expected_batch:
             raise ValueError(f"biome_mask batch size ({biome_mask.shape[0]}) != expected ({expected_batch})")
 
-       # Leave the mask as-is — the denoising loop already duplicates for classifier-free guidance.
-       # (Inside the loop we handle dtype/device and doubling for guidance.)
-       # -----------------------------
-
+      
 
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
